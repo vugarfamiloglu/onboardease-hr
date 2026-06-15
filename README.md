@@ -91,6 +91,16 @@ OnboardEase HR/
 
 The **storage and encryption layers are the only code that touches document bytes** — swapping `STORAGE_BACKEND` from `local` to `s3` changes nothing else.
 
+## Screenshots
+
+<img width="1919" height="889" alt="01" src="https://github.com/user-attachments/assets/a8a5d0e9-a504-4103-93bc-9a6e9411efb5" />
+
+<img width="1919" height="888" alt="02" src="https://github.com/user-attachments/assets/3f0bf24c-2ec5-46bd-bde9-2bb6ab9a5002" />
+
+<img width="1918" height="887" alt="03" src="https://github.com/user-attachments/assets/7cfbbe60-d9dc-4dce-bff6-dc04ee1f5165" />
+
+<img width="1919" height="890" alt="04" src="https://github.com/user-attachments/assets/d9bb8bd9-6edd-4f8b-9d8e-307c70061a33" />
+
 ## License
 
 Apache License 2.0.
