@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% block title %}Employees{% endblock %}
+{% block crumb %}Onboarding{% endblock %}
+{% block heading %}Employees{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Employee onboarding</h1>
+    <p>{{ employees|length }} record(s) · drag column edges to resize the table.</p>
+  </div>
+  <div style="display:flex;gap:10px">
+    <a class="btn" href="{{ url_for('employees.export_csv') }}">{{ icon('download', 16) }} Export CSV</a>
+    <a class="btn btn-primary" href="{{ url_for('employees.new') }}">{{ icon('plus', 16) }} New hire</a>
+  </div>
+</div>
+
+<form class="card card-pad" method="get" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:18px">
+  <div style="position:relative;flex:1;min-width:220px">
+    <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--faint)">{{ icon('search', 16) }}</span>
+    <input class="input" style="padding-left:36px" name="q" value="{{ q }}" placeholder="Search name or email…">
+  </div>
+  <select class="select" name="status" style="width:auto" onchange="this.form.submit()">
+    <option value="all" {{ 'selected' if status == 'all' }}>All statuses</option>
+    {% for s in statuses %}<option value="{{ s }}" {{ 'selected' if status == s }}>{{ status_labels[s] }}</option>{% endfor %}
+  </select>
+  <select class="select" name="department" style="width:auto" onchange="this.form.submit()">
+    <option value="all" {{ 'selected' if dept == 'all' }}>All departments</option>
+    {% for d in departments %}<option value="{{ d.id }}" {{ 'selected' if dept == d.id|string }}>{{ d.name }}</option>{% endfor %}
+  </select>
+  <button class="btn" type="submit">Filter</button>
+</form>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="data-table" data-key="employees">
+      <thead><tr>
+        <th>Employee</th><th>Position</th><th>Department</th><th>Start date</th>
+        <th>Status</th><th>Progress</th><th>Manager</th>
+      </tr></thead>
+      <tbody>
+        {% for e in employees %}
+        <tr style="cursor:pointer" onclick="window.location='{{ url_for('employees.detail', emp_id=e.id) }}'">
+          <td>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="avatar" style="background: {{ e.color }};width:30px;height:30px;font-size:11px">{{ e.initials }}</span>
+              <div style="min-width:0"><div style="font-weight:600">{{ e.full_name }}</div>
+                <div class="muted" style="font-size:11px">{{ e.email }}</div></div>
+            </div>
+          </td>
+          <td>{{ e.position.title if e.position else '—' }}</td>
+          <td>{{ e.department.name if e.department else '—' }}</td>
+          <td class="num">{{ e.start_date | dt }}</td>
+          <td><span class="pill pill-{{ e.status }}">{{ e.status_label }}</span></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress-track" style="flex:1;max-width:90px"><div class="progress-fill" style="width: {{ e.progress }}%"></div></div>
+              <span class="num muted" style="font-size:11.5px">{{ e.progress }}%</span>
+            </div>
+          </td>
+          <td class="muted">{{ e.manager_name or '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7"><div class="empty">No employees match your filters.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ APP_NAME }}{% endblock %} · {{ APP_NAME }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <script>
+    // Apply theme + sidebar state before paint to avoid flash.
+    (function () {
+      try {
+        var t = localStorage.getItem('oeh-theme') ||
+          (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', t);
+        if (localStorage.getItem('oeh-sidebar') === '1') document.documentElement.classList.add('sidebar-collapsed');
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+{% from 'partials/icons.html' import icon %}
+{% if current_user.is_authenticated %}
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark">{{ icon('spark', 20) }}</span>
+      <div class="brand-text">
+        <div class="brand-word">OnboardEase</div>
+        <div class="brand-sub">HR · ONBOARDING</div>
+      </div>
+    </div>
+
+    <nav style="flex:1">
+      <div class="nav-label">Overview</div>
+      <a class="nav-link {{ 'active' if request.blueprint == 'dashboard' }}" href="{{ url_for('dashboard.index') }}" data-tip="Dashboard">{{ icon('dashboard') }}<span class="label">Dashboard</span></a>
+
+      <div class="nav-label">Onboarding</div>
+      <a class="nav-link {{ 'active' if request.blueprint == 'employees' }}" href="{{ url_for('employees.index') }}" data-tip="Employees">{{ icon('people') }}<span class="label">Employees</span>{% if nav_counts.active_onboarding %}<span class="badge">{{ nav_counts.active_onboarding }}</span>{% endif %}</a>
+      <a class="nav-link {{ 'active' if request.blueprint == 'training' }}" href="{{ url_for('training.index') }}" data-tip="Training">{{ icon('training') }}<span class="label">Training</span></a>
+      <a class="nav-link {{ 'active' if request.blueprint == 'approvals' }}" href="{{ url_for('approvals.index') }}" data-tip="Approvals">{{ icon('approvals') }}<span class="label">Approvals</span>{% if nav_counts.pending_approvals %}<span class="badge">{{ nav_counts.pending_approvals }}</span>{% endif %}</a>
+
+      {% if current_user.can_approve %}
+      <div class="nav-label">Compliance</div>
+      <a class="nav-link {{ 'active' if request.blueprint == 'audit_log' }}" href="{{ url_for('audit_log.index') }}" data-tip="Audit Log">{{ icon('audit') }}<span class="label">Audit Log</span></a>
+      <a class="nav-link {{ 'active' if request.blueprint == 'system_log' }}" href="{{ url_for('system_log.logs') }}" data-tip="System Log">{{ icon('logs') }}<span class="label">System Log</span></a>
+      {% endif %}
+    </nav>
+
+    <div class="sidebar-foot">
+      <button class="collapse-btn" onclick="toggleSidebar()">{{ icon('collapse', 18) }}<span>Collapse</span></button>
+    </div>
+  </aside>
+
+  <header class="topbar">
+    <button class="icon-btn" onclick="toggleSidebar()" title="Toggle sidebar" style="border:none;background:transparent">{{ icon('collapse', 18) }}</button>
+    <div style="display:flex;flex-direction:column;min-width:0">
+      <span class="crumb">{% block crumb %}OnboardEase{% endblock %}</span>
+      <span class="title">{% block heading %}{{ APP_NAME }}{% endblock %}</span>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:12px">
+      <span class="pill pill-ok" title="Document storage backend">{{ icon('lock', 12) }} {{ storage_backend|upper }} · encrypted</span>
+      <button id="theme-toggle" class="icon-btn theme-toggle" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
+        <span class="sun">{{ icon('sun', 17) }}</span><span class="moon">{{ icon('moon', 17) }}</span>
+      </button>
+      <span class="avatar" style="background: {{ current_user.color }}" title="{{ current_user.name }} ({{ current_user.role }})">{{ current_user.initials }}</span>
+      <a class="icon-btn" href="{{ url_for('auth.logout') }}" title="Sign out" style="border:none;background:transparent">{{ icon('logout', 17) }}</a>
+    </div>
+  </header>
+
+  <main class="workbench">
+    {% block content %}{% endblock %}
+  </main>
+</div>
+{% else %}
+  {% block fullpage %}{% endblock %}
+{% endif %}
+
+<div class="flashes">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="flash flash-{{ category }}">
+      <span class="ic">{{ icon('check' if category == 'success' else ('x' if category == 'error' else 'alert'), 15) }}</span>
+      <div style="font-size:13px;font-weight:500">{{ message }}</div>
+    </div>
+    {% endfor %}
+  {% endwith %}
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

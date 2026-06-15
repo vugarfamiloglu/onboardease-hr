@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% block title %}Approvals{% endblock %}
+{% block crumb %}Onboarding{% endblock %}
+{% block heading %}Approvals{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Approval workflow</h1><p>HR manager sign-off for onboardings and documents.</p></div></div>
+
+<div class="card card-pad" style="margin-bottom:18px">
+  <div class="section-title" style="margin-bottom:14px">Pending ({{ pending|length }})</div>
+  {% for a in pending %}
+  <div class="appr-row">
+    <span class="appr-ic">{{ icon('doc' if a.kind == 'document' else 'people', 18) }}</span>
+    <div style="flex:1;min-width:0">
+      <div style="font-weight:600;font-size:13.5px">
+        {% if a.kind == 'document' and a.document %}{{ a.document.title }}{% else %}{{ a.employee.full_name if a.employee else '—' }}{% endif %}
+        <span class="tag-chip" style="margin-left:7px;height:18px;font-size:10px">{{ a.kind }}</span>
+      </div>
+      <div class="muted" style="font-size:11.5px">
+        {% if a.employee %}<a href="{{ url_for('employees.detail', emp_id=a.employee.id) }}" style="color:var(--primary)">{{ a.employee.full_name }}</a> · {% endif %}requested {{ a.created_at | dt }}
+      </div>
+    </div>
+    {% if current_user.can_approve %}
+    <form method="post" action="{{ url_for('approvals.decision', approval_id=a.id) }}" style="display:flex;gap:7px;align-items:center">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input class="input" name="comment" placeholder="Note…" style="height:34px;width:160px;font-size:12px">
+      <button class="btn btn-sm btn-primary" name="action" value="approve">{{ icon('pen', 13) }} Sign</button>
+      <button class="btn btn-sm btn-danger" name="action" value="reject" data-confirm="Reject this request?">{{ icon('x', 13) }}</button>
+    </form>
+    {% else %}<span class="pill pill-pending">awaiting manager</span>{% endif %}
+  </div>
+  {% else %}<div class="muted" style="font-size:13px">Nothing awaiting sign-off. 🎉</div>{% endfor %}
+</div>
+
+<div class="card card-pad">
+  <div class="section-title" style="margin-bottom:14px">Recently decided</div>
+  <div class="table-wrap">
+    <table class="data-table" data-key="approvals">
+      <thead><tr><th>Subject</th><th>Kind</th><th>Decision</th><th>Signed by</th><th>When</th><th>Note</th></tr></thead>
+      <tbody>
+        {% for a in decided %}
+        <tr>
+          <td style="font-weight:600">{% if a.kind == 'document' and a.document %}{{ a.document.title }}{% else %}{{ a.employee.full_name if a.employee else '—' }}{% endif %}</td>
+          <td>{{ a.kind }}</td>
+          <td><span class="pill pill-{{ a.status }}">{{ a.status }}</span></td>
+          <td>{{ a.signature_name or '—' }}</td>
+          <td class="num muted">{{ a.decided_at | dtime('%b %d, %H:%M') }}</td>
+          <td class="muted">{{ a.comment or '—' }}</td>
+        </tr>
+        {% else %}<tr><td colspan="6"><div class="empty">No decisions yet.</div></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+  .appr-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .appr-row:last-child { border-bottom: none; }
+  .appr-ic { width: 38px; height: 38px; border-radius: 10px; background: var(--clay-soft); color: var(--clay); display: grid; place-items: center; flex-shrink: 0; }
+</style>
+{% endblock %}

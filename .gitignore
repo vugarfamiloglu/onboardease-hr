@@ -1,0 +1,21 @@
+# Python
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Local data, secrets and encrypted documents (never commit)
+data/
+.env
+.env.*
+!.env.example
+
+# Master encryption key (if ever placed at root)
+.master-key
+
+# Logs / tooling
+*.log
+.playwright-mcp/
+.DS_Store
+Thumbs.db

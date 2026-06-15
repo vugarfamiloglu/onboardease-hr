@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% block title %}Dashboard{% endblock %}
+{% block crumb %}Overview{% endblock %}
+{% block heading %}Dashboard{% endblock %}
+{% block content %}
+{% set kmax = funnel | map(attribute='count') | max %}
+{% set dmax = (doc_rows.values() | list | max) if doc_rows else 1 %}
+
+<div class="page-head">
+  <div>
+    <h1>Welcome back, {{ current_user.name.split()[0] }}</h1>
+    <p>Onboarding pipeline, document compliance and training at a glance.</p>
+  </div>
+  <div style="display:flex;gap:10px">
+    <form method="post" action="{{ url_for('dashboard.run_reminders') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn" type="submit">{{ icon('mail', 16) }} Send reminders</button>
+    </form>
+    <a class="btn btn-primary" href="{{ url_for('employees.new') }}">{{ icon('plus', 16) }} New hire</a>
+  </div>
+</div>
+
+<div class="stack">
+  <div class="kpi-grid">
+    {% set cards = [
+      ('Total onboardings', kpis.total, 'people', 'var(--primary)'),
+      ('In progress', kpis.in_progress, 'clock', 'var(--clay)'),
+      ('Active employees', kpis.active, 'check', 'var(--primary)'),
+      ('Pending approvals', kpis.pending_approvals, 'approvals', 'var(--info)'),
+      ('Documents', kpis.documents, 'doc', 'var(--info)'),
+      ('Trainings scheduled', kpis.trainings_scheduled, 'training', 'var(--clay)')
+    ] %}
+    {% for label, val, ic, tone in cards %}
+    <div class="card kpi">
+      <span class="kpi-ic" style="background: color-mix(in srgb, {{ tone }} 14%, transparent); color: {{ tone }}">{{ icon(ic, 18) }}</span>
+      <div><div class="kpi-val num">{{ val }}</div><div class="kpi-label">{{ label }}</div></div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="grid-2">
+    <div class="card card-pad">
+      <div class="section-title" style="margin-bottom:16px">Onboarding funnel</div>
+      <div class="funnel">
+        {% for s in funnel %}
+        <div class="funnel-row">
+          <span class="funnel-label">{{ s.label }}</span>
+          <div class="funnel-bar">
+            <div class="funnel-fill" style="width: {{ (s.count / kmax * 100) if kmax else 0 }}%">{{ s.count }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card card-pad">
+      <div class="section-title" style="margin-bottom:8px">Documents by type</div>
+      <p class="muted" style="font-size:12px;margin:0 0 6px">Hover a bar for the exact count.</p>
+      <div class="bars" data-chart>
+        {% for t, c in doc_rows.items() %}
+        <div class="bar-col">
+          <div class="bar" data-value="{{ c }} document(s)" data-label="{{ t|capitalize }}"
+               style="height: {{ (c / dmax * 100) if dmax else 0 }}%; background: {{ ['var(--primary)','var(--clay)','var(--info)','var(--warn)','var(--danger)'][loop.index0 % 5] }}"></div>
+          <div class="bar-cap">{{ t|capitalize }}</div>
+        </div>
+        {% else %}
+        <div class="empty">No documents yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="card card-pad">
+      <div class="section-title" style="margin-bottom:12px">{{ icon('training', 16) }} Upcoming trainings</div>
+      {% for s in reminders.trainings %}
+      <div class="list-row">
+        <span class="avatar" style="background: {{ s.employee.color }};width:26px;height:26px;font-size:10px">{{ s.employee.initials }}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:13px">{{ s.module.title if s.module else 'Session' }}</div>
+          <div class="muted" style="font-size:11px">{{ s.employee.full_name }} · {{ s.trainer_name }}</div>
+        </div>
+        <span class="num muted" style="font-size:11.5px">{{ s.scheduled_date | dt('%b %d') }}</span>
+      </div>
+      {% else %}<div class="muted" style="font-size:13px">No trainings in the next 7 days.</div>{% endfor %}
+    </div>
+
+    <div class="card card-pad">
+      <div class="section-title" style="margin-bottom:12px">{{ icon('alert', 16) }} Expiring documents</div>
+      {% for d in reminders.expiring %}
+      <div class="list-row">
+        <span class="pill pill-warn">{{ (d.expires_on - today).days }}d</span>
+        <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px">{{ d.title }}</div>
+          <div class="muted" style="font-size:11px">{{ d.employee.full_name if d.employee }}</div></div>
+        <span class="num muted" style="font-size:11.5px">{{ d.expires_on | dt('%b %d') }}</span>
+      </div>
+      {% else %}<div class="muted" style="font-size:13px">No documents expiring soon.</div>{% endfor %}
+    </div>
+
+    <div class="card card-pad">
+      <div class="section-title" style="margin-bottom:12px">{{ icon('approvals', 16) }} Awaiting approval</div>
+      {% for a in reminders.approvals %}
+      <div class="list-row">
+        <span class="pill pill-pending">{{ a.kind }}</span>
+        <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px">{{ a.employee.full_name if a.employee else a.document.title }}</div>
+          <div class="muted" style="font-size:11px">{{ a.created_at | dt('%b %d') }}</div></div>
+        <a class="btn btn-sm" href="{{ url_for('approvals.index') }}">Review</a>
+      </div>
+      {% else %}<div class="muted" style="font-size:13px">Nothing awaiting sign-off.</div>{% endfor %}
+    </div>
+  </div>
+
+  <div class="card card-pad">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="section-title">Recent onboardings</div>
+      <a class="btn btn-sm" href="{{ url_for('employees.index') }}">View all</a>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px">
+      {% for e in recent %}
+      <a href="{{ url_for('employees.detail', emp_id=e.id) }}" class="card card-pad" style="padding:14px;display:flex;gap:11px;align-items:center">
+        <span class="avatar" style="background: {{ e.color }};width:38px;height:38px;font-size:13px">{{ e.initials }}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:13.5px">{{ e.full_name }}</div>
+          <div class="muted" style="font-size:11.5px">{{ e.position.title if e.position else '—' }}</div>
+        </div>
+        <span class="pill pill-{{ e.status }}">{{ e.status_label }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% block title %}Audit Log{% endblock %}
+{% block crumb %}Compliance{% endblock %}
+{% block heading %}Audit Log{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Audit log</h1><p>Immutable record of who viewed, edited, downloaded and approved.</p></div>
+  <a class="btn" href="{{ url_for('audit_log.export_csv') }}">{{ icon('download', 16) }} Export CSV</a>
+</div>
+
+<form class="card card-pad" method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px">
+  <div style="position:relative;flex:1;min-width:200px">
+    <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--faint)">{{ icon('search', 16) }}</span>
+    <input class="input" style="padding-left:36px" name="q" value="{{ q }}" placeholder="Search detail…">
+  </div>
+  <select class="select" name="action" style="width:auto" onchange="this.form.submit()">
+    <option value="all" {{ 'selected' if action == 'all' }}>All actions</option>
+    {% for a in actions %}<option value="{{ a }}" {{ 'selected' if action == a }}>{{ a }}</option>{% endfor %}
+  </select>
+  <select class="select" name="entity" style="width:auto" onchange="this.form.submit()">
+    <option value="all" {{ 'selected' if entity == 'all' }}>All entities</option>
+    {% for e in entities %}<option value="{{ e }}" {{ 'selected' if entity == e }}>{{ e }}</option>{% endfor %}
+  </select>
+  <button class="btn" type="submit">Filter</button>
+</form>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="data-table" data-key="audit">
+      <thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Entity</th><th>Detail</th><th>IP</th></tr></thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td class="num muted">{{ log.created_at | dtime('%b %d, %H:%M:%S') }}</td>
+          <td style="font-weight:600">{{ log.actor_name }}</td>
+          <td><span class="pill pill-{{ 'ok' if log.action in ['approved','created','login'] else ('danger' if log.action in ['rejected','deleted'] else 'info') }}">{{ log.action }}</span></td>
+          <td class="muted">{{ log.entity_type }}{% if log.entity_id %} #{{ log.entity_id }}{% endif %}</td>
+          <td>{{ log.summary }}</td>
+          <td class="num muted">{{ log.ip or '—' }}</td>
+        </tr>
+        {% else %}<tr><td colspan="6"><div class="empty">No audit entries.</div></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

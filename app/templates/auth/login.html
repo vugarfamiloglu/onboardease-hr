@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% block title %}Sign in{% endblock %}
+{% block fullpage %}
+<div class="login-page">
+  <div class="login-card card">
+    <div class="login-brand">
+      <span class="brand-mark" style="width:44px;height:44px">{{ icon('spark', 24) }}</span>
+      <div>
+        <div style="font-family:var(--font-display);font-weight:700;font-size:20px">OnboardEase HR</div>
+        <div class="muted" style="font-size:12.5px">Onboarding & document management</div>
+      </div>
+    </div>
+
+    <form method="post" style="margin-top:24px">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label class="field-label">Work email</label>
+        <input class="input" type="email" name="email" placeholder="hr@onboardease.test" autofocus required>
+      </div>
+      <div class="field">
+        <label class="field-label">Password</label>
+        <input class="input" type="password" name="password" placeholder="••••••••" required>
+      </div>
+      <button class="btn btn-primary" type="submit" style="width:100%;height:42px;margin-top:6px">Sign in</button>
+    </form>
+
+    <div class="login-hint">
+      <strong>Demo accounts</strong>
+      <div><code>hr@onboardease.test</code> · admin</div>
+      <div><code>manager@onboardease.test</code> · HR manager</div>
+      <div class="muted">password: <code>onboard123</code></div>
+    </div>
+  </div>
+  <button class="icon-btn theme-toggle login-theme" onclick="toggleTheme()" aria-label="Toggle theme">
+    <span class="sun">{{ icon('sun', 17) }}</span><span class="moon">{{ icon('moon', 17) }}</span>
+  </button>
+</div>
+
+<style>
+  .login-page { min-height: 100vh; display: grid; place-items: center; padding: 24px;
+    background: radial-gradient(120% 100% at 50% 0%, var(--primary-soft), var(--bg) 55%); }
+  .login-card { width: 400px; max-width: 100%; padding: 32px; box-shadow: var(--shadow-lg); }
+  .login-brand { display: flex; align-items: center; gap: 13px; }
+  .login-hint { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--ink-soft); display: flex; flex-direction: column; gap: 3px; }
+  .login-hint code { font-family: var(--font-mono); color: var(--primary); }
+  .login-theme { position: fixed; top: 20px; right: 20px; }
+</style>
+{% endblock %}

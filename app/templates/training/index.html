@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% block title %}Training{% endblock %}
+{% block crumb %}Onboarding{% endblock %}
+{% block heading %}Training{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Training tracker</h1><p>Plan onboarding training and track completion.</p></div></div>
+
+<div class="grid-2" style="grid-template-columns:1.4fr 1fr;align-items:start">
+  <div class="card card-pad">
+    <div class="section-title" style="margin-bottom:14px">Scheduled sessions</div>
+    <div class="table-wrap">
+      <table class="data-table" data-key="trainings">
+        <thead><tr><th>Employee</th><th>Module</th><th>Trainer</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+          {% for s in sessions %}
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:8px"><span class="avatar" style="background: {{ s.employee.color }};width:26px;height:26px;font-size:10px">{{ s.employee.initials }}</span>{{ s.employee.full_name }}</div></td>
+            <td>{{ s.module.title if s.module else '—' }}</td>
+            <td class="muted">{{ s.trainer_name or '—' }}</td>
+            <td class="num">{{ s.scheduled_date | dt }}</td>
+            <td><span class="pill pill-{{ s.status }}">{{ s.status }}</span></td>
+            <td>{% if s.status == 'scheduled' %}<form method="post" action="{{ url_for('training.complete', session_id=s.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm" type="submit">Complete</button></form>{% else %}<span class="muted">—</span>{% endif %}</td>
+          </tr>
+          {% else %}<tr><td colspan="6"><div class="empty">No sessions scheduled yet.</div></td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="stack">
+    <div class="card card-pad">
+      <div class="section-title" style="margin-bottom:12px">Schedule a session</div>
+      <form method="post" action="{{ url_for('training.schedule') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="field"><label class="field-label">Employee</label>
+          <select class="select" name="employee_id" required><option value="">— Select —</option>
+            {% for e in employees %}<option value="{{ e.id }}">{{ e.full_name }}</option>{% endfor %}</select></div>
+        <div class="field"><label class="field-label">Module</label>
+          <select class="select" name="module_id" required><option value="">— Select —</option>
+            {% for m in modules %}<option value="{{ m.id }}">{{ m.title }}</option>{% endfor %}</select></div>
+        <div class="grid-2">
+          <div class="field"><label class="field-label">Trainer</label><input class="input" name="trainer_name" placeholder="Trainer name"></div>
+          <div class="field"><label class="field-label">Date</label><input class="input" type="date" name="scheduled_date"></div>
+        </div>
+        <button class="btn btn-primary" type="submit" style="width:100%">{{ icon('calendar', 15) }} Schedule</button>
+      </form>
+    </div>
+
+    <div class="card card-pad">
+      <div class="section-title" style="margin-bottom:12px">Training modules</div>
+      {% for m in modules %}
+      <div class="list-row">
+        <span class="tl-ic">{{ icon('training', 15) }}</span>
+        <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px">{{ m.title }}</div>
+          <div class="muted" style="font-size:11px">{{ m.category }} · {{ m.duration_hours }}h</div></div>
+      </div>
+      {% endfor %}
+      <form method="post" action="{{ url_for('training.create_module') }}" style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input class="input" name="title" placeholder="New module title" style="flex:1;min-width:140px">
+        <input class="input" name="duration_hours" type="number" step="0.5" value="1" style="width:70px" title="Hours">
+        <button class="btn btn-sm" type="submit">{{ icon('plus', 14) }}</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

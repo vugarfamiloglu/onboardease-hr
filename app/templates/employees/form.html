@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% block title %}New hire{% endblock %}
+{% block crumb %}Onboarding{% endblock %}
+{% block heading %}New hire{% endblock %}
+{% block content %}
+<a class="btn btn-ghost btn-sm" href="{{ url_for('employees.index') }}" style="margin-bottom:14px">{{ icon('chevronLeft', 15) }} Back to employees</a>
+
+<form method="post" class="card card-pad" style="max-width:820px">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="section-title" style="margin-bottom:4px">Personal information</div>
+  <p class="muted" style="font-size:12.5px;margin:0 0 16px">A starter onboarding checklist and a pending HR approval are created automatically.</p>
+
+  <div class="grid-2">
+    <div class="field"><label class="field-label">First name *</label><input class="input" name="first_name" value="{{ emp.first_name or '' }}" required></div>
+    <div class="field"><label class="field-label">Last name *</label><input class="input" name="last_name" value="{{ emp.last_name or '' }}" required></div>
+  </div>
+  <div class="grid-2">
+    <div class="field"><label class="field-label">Work email *</label><input class="input" type="email" name="email" value="{{ emp.email or '' }}" required></div>
+    <div class="field"><label class="field-label">Phone</label><input class="input" name="phone" value="{{ emp.phone or '' }}"></div>
+  </div>
+  <div class="grid-2">
+    <div class="field"><label class="field-label">Date of birth</label><input class="input" type="date" name="date_of_birth" value="{{ emp.date_of_birth or '' }}"></div>
+    <div class="field"><label class="field-label">National ID / Passport</label><input class="input" name="national_id" value="{{ emp.national_id or '' }}"></div>
+  </div>
+  <div class="field"><label class="field-label">Address</label><input class="input" name="address" value="{{ emp.address or '' }}"></div>
+
+  <div class="section-title" style="margin:18px 0 14px">Position & start</div>
+  <div class="grid-2">
+    <div class="field"><label class="field-label">Position</label>
+      <select class="select" name="position_id"><option value="">— Select —</option>
+        {% for p in positions %}<option value="{{ p.id }}" {{ 'selected' if emp.position_id == p.id }}>{{ p.title }}</option>{% endfor %}
+      </select></div>
+    <div class="field"><label class="field-label">Department</label>
+      <select class="select" name="department_id"><option value="">— Select —</option>
+        {% for d in departments %}<option value="{{ d.id }}" {{ 'selected' if emp.department_id == d.id }}>{{ d.name }}</option>{% endfor %}
+      </select></div>
+  </div>
+  <div class="grid-3">
+    <div class="field"><label class="field-label">Hiring manager</label><input class="input" name="manager_name" value="{{ emp.manager_name or '' }}"></div>
+    <div class="field"><label class="field-label">Employment type</label>
+      <select class="select" name="employment_type">
+        {% for t in ['Full-time','Part-time','Contract','Intern'] %}<option {{ 'selected' if emp.employment_type == t }}>{{ t }}</option>{% endfor %}
+      </select></div>
+    <div class="field"><label class="field-label">Start date</label><input class="input" type="date" name="start_date" value="{{ emp.start_date or '' }}"></div>
+  </div>
+
+  <div style="display:flex;justify-content:flex-end;gap:9px;margin-top:8px">
+    <a class="btn btn-ghost" href="{{ url_for('employees.index') }}">Cancel</a>
+    <button class="btn btn-primary" type="submit">{{ icon('check', 15) }} Create onboarding</button>
+  </div>
+</form>
+{% endblock %}

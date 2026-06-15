@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% block title %}System Log{% endblock %}
+{% block crumb %}Compliance{% endblock %}
+{% block heading %}System Log{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>System log</h1><p>Application events — uploads, reminders, approvals and errors.</p></div></div>
+
+<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+  {% for lv, label, tone in [('all','All','var(--muted)'),('info','Info','var(--info)'),('warn','Warn','var(--warn)'),('error','Error','var(--danger)')] %}
+  <a class="btn btn-sm {{ 'btn-primary' if level == lv }}" href="{{ url_for('system_log.logs', level=lv) }}">
+    {{ label }}{% if lv != 'all' %} <span class="num" style="opacity:.7">{{ counts[lv] }}</span>{% endif %}
+  </a>
+  {% endfor %}
+</div>
+
+<div class="card log-console">
+  {% for r in rows %}
+  <div class="log-line log-{{ r.level }}">
+    <span class="log-time num">{{ r.created_at | dtime('%H:%M:%S') }}</span>
+    <span class="log-lvl">{{ r.level|upper }}</span>
+    <span class="log-src">{{ r.source }}</span>
+    <span class="log-msg">{{ r.message }}{% if r.meta %} <span class="muted">{{ r.meta }}</span>{% endif %}</span>
+  </div>
+  {% else %}<div class="empty">No system events logged.</div>{% endfor %}
+</div>
+
+<style>
+  .log-console { padding: 14px 16px; font-family: var(--font-mono); font-size: 12px; max-height: 70vh; overflow-y: auto; background: var(--paper); }
+  .log-line { display: flex; gap: 12px; padding: 4px 0; align-items: baseline; border-bottom: 1px solid var(--line); }
+  .log-line:last-child { border-bottom: none; }
+  .log-time { color: var(--faint); flex-shrink: 0; }
+  .log-lvl { width: 48px; flex-shrink: 0; font-weight: 700; font-size: 10.5px; }
+  .log-info .log-lvl { color: var(--info); } .log-warn .log-lvl { color: var(--warn); }
+  .log-error .log-lvl { color: var(--danger); } .log-debug .log-lvl { color: var(--muted); }
+  .log-src { width: 90px; flex-shrink: 0; color: var(--clay); }
+  .log-msg { color: var(--ink-soft); }
+</style>
+{% endblock %}
